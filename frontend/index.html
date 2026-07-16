@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Board</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Arial, Helvetica, sans-serif;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --border: #e5e7eb;
+            --text: #1f2937;
+            --muted: #64748b;
+            --primary: #2563eb;
+            --primary-strong: #1d4ed8;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+        }
+
+        .page-header h1 {
+            margin: 0 0 4px;
+            font-size: 1.5rem;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .new-task-button {
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--primary);
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .new-task-button:hover,
+        .new-task-button:focus-visible {
+            background: var(--primary-strong);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            padding: 24px 32px;
+        }
+
+        .task-column {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 240px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .column-header h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #334155;
+        }
+
+        .task-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            background: var(--surface);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .task-title {
+            margin: 0 0 6px;
+            font-size: 1rem;
+            color: #0f172a;
+        }
+
+        .task-description {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .task-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            color: #475569;
+        }
+
+        .task-priority,
+        .task-assignee {
+            font-weight: 600;
+        }
+
+        .task-priority {
+            color: #92400e;
+        }
+
+        .task-assignee {
+            color: #1d4ed8;
+        }
+
+        .edit-task-button {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: var(--surface-soft);
+            color: #334155;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .edit-task-button:hover,
+        .edit-task-button:focus-visible {
+            background: #eef2ff;
+            border-color: #94a3b8;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .new-task-button {
+                width: auto;
+                align-self: flex-start;
+            }
+
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="page-header">
+        <div>
+            <h1>Task Board</h1>
+            <p>Drag tasks between columns to update their status</p>
+        </div>
+
+        <button type="button" class="new-task-button">
+            New Task
+        </button>
+    </header>
+
+    <main class="board" aria-label="Task board">
+        <section class="task-column" data-status="ToDo">
+            <header class="column-header">
+                <h2>To Do</h2>
+                <span class="task-count">1</span>
+            </header>
+
+            <div class="task-list">
+                <article class="task-card" data-task-id="sample-todo">
+                    <h3 class="task-title">Prepare project brief</h3>
+
+                    <p class="task-description">
+                        Review the initial project requirements.
+                    </p>
+
+                    <div class="task-meta">
+                        <span class="task-priority">Priority: High</span>
+                        <span class="task-assignee">Assignee: Wassim</span>
+                    </div>
+
+                    <button type="button" class="edit-task-button">
+                        Edit
+                    </button>
+                </article>
+            </div>
+        </section>
+        <section class="task-column" data-status="InProgress">
+            <header class="column-header">
+                <h2>In Progress</h2>
+                <span class="task-count">1</span>
+            </header>
+
+            <div class="task-list">
+                <article class="task-card" data-task-id="sample-inprogress">
+                    <h3 class="task-title">Design wireframes</h3>
+                    <p class="task-description">
+                        Create wireframes for the new feature.
+                    </p>
+                    <div class="task-meta">
+                        <span class="task-priority">Priority: Medium</span>
+                        <span class="task-assignee">Assignee: Alice</span>
+                    </div>
+                    <button type="button" class="edit-task-button">
+                        Edit
+                    </button>
+                </article>
+            </div>
+        </section>
+        <section class="task-column" data-status="Done">
+            <header class="column-header">
+                <h2>Done</h2>
+                <span class="task-count">1</span>
+            </header>
+            <div class="task-list">
+                <article class="task-card" data-task-id="sample-done">
+                    <h3 class="task-title">Finalize project plan</h3>
+                    <p class="task-description">
+                        Complete the project plan and get approval.
+                    </p>
+                    <div class="task-meta">
+                        <span class="task-priority">Priority: Low</span>
+                        <span class="task-assignee">Assignee: Bob</span>
+                    </div>
+                    <button type="button" class="edit-task-button">
+                        Edit
+                    </button>
+                </article>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>
