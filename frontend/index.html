@@ -356,6 +356,166 @@
         </section>
     </main>
 
+    <script>
+        const API_BASE_URL = "http://localhost:8000";
+        const PRIORITY_RANK = {
+            High: 0,
+            Medium: 1,
+            Low: 2
+        };
+
+        let tasks = [];
+
+        function compareTasksByPriority(leftTask, rightTask) {
+            const leftRank = PRIORITY_RANK[leftTask.priority] ?? 3;
+            const rightRank = PRIORITY_RANK[rightTask.priority] ?? 3;
+
+            if (leftRank !== rightRank) {
+                return leftRank - rightRank;
+            }
+
+            const leftId = Number(leftTask.id);
+            const rightId = Number(rightTask.id);
+
+            if (!Number.isNaN(leftId) && !Number.isNaN(rightId)) {
+                if (leftId < rightId) {
+                    return -1;
+                }
+
+                if (leftId > rightId) {
+                    return 1;
+                }
+            }
+
+            if (leftTask.id < rightTask.id) {
+                return -1;
+            }
+
+            if (leftTask.id > rightTask.id) {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        function createTaskCard(task) {
+            const card = document.createElement("article");
+            card.className = "task-card";
+            card.setAttribute("data-task-id", String(task.id));
+
+            const title = document.createElement("h3");
+            title.className = "task-title";
+            title.textContent = task.title && String(task.title).trim()
+                ? String(task.title)
+                : "Untitled task";
+            card.appendChild(title);
+
+            const description = document.createElement("p");
+            description.className = "task-description";
+            description.textContent = task.description && String(task.description).trim()
+                ? String(task.description)
+                : "";
+            card.appendChild(description);
+
+            const meta = document.createElement("div");
+            meta.className = "task-meta";
+
+            const priority = document.createElement("span");
+            const normalizedPriority = task.priority && String(task.priority).trim()
+                ? String(task.priority).trim()
+                : "Low";
+            priority.className = `task-priority priority-${normalizedPriority.toLowerCase()}`;
+            priority.textContent = normalizedPriority.toUpperCase();
+            meta.appendChild(priority);
+
+            const assignee = document.createElement("span");
+            assignee.className = "task-assignee";
+            const safeAssignee = task.assignee && String(task.assignee).trim()
+                ? String(task.assignee).trim()
+                : "Unassigned";
+            assignee.textContent = `Assignee: ${safeAssignee}`;
+            meta.appendChild(assignee);
+
+            card.appendChild(meta);
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "edit-task-button";
+            editButton.textContent = "Edit";
+            card.appendChild(editButton);
+
+            return card;
+        }
+
+        function renderBoard(tasksToRender) {
+            const columns = Array.from(document.querySelectorAll(".task-column"));
+
+            columns.forEach((column) => {
+                const taskList = column.querySelector(".task-list");
+                if (!taskList) {
+                    return;
+                }
+
+                taskList.querySelectorAll(".task-card").forEach((existingCard) => {
+                    existingCard.remove();
+                });
+
+                const status = column.dataset.status;
+                const sortedTasks = (tasksToRender || [])
+                    .filter((task) => task.status === status)
+                    .slice()
+                    .sort(compareTasksByPriority);
+
+                const placeholder = taskList.querySelector(".drop-placeholder");
+
+                sortedTasks.forEach((task) => {
+                    const card = createTaskCard(task);
+                    if (placeholder) {
+                        taskList.insertBefore(card, placeholder);
+                    } else {
+                        taskList.appendChild(card);
+                    }
+                });
+
+                const countElement = column.querySelector(".task-count");
+                if (countElement) {
+                    countElement.textContent = String(sortedTasks.length);
+                }
+            });
+        }
+
+        async function fetchTasks() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tasks`);
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const payload = await response.json();
+
+                if (!Array.isArray(payload)) {
+                    throw new Error("Expected an array of tasks from the backend");
+                }
+
+                tasks = payload;
+                renderBoard(tasks);
+            } catch (error) {
+                console.error("Failed to load tasks", error);
+            }
+        }
+
+        function initializeBoard() {
+            fetchTasks();
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initializeBoard);
+        } else {
+            initializeBoard();
+        }
+    </script>
+
 </body>
 
 </html>

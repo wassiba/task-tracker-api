@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import storage
 from app.business_rules import validate_status_transition
@@ -28,6 +29,21 @@ app = FastAPI(
     title="Task Tracker API",
     version="0.1.0",
     description="Learning-focused Task Tracker REST API for Module 1."
+)
+
+allowed_origins = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
