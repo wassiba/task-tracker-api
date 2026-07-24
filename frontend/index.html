@@ -751,20 +751,20 @@
                 });
 
                 const status = column.dataset.status;
-                const sortedTasks = (tasksToRender || [])
-                    .filter((task) => task.status === status)
-                    .slice()
-                    .sort(compareTasksByPriority);
+                const filteredTasks = (tasksToRender || []).filter((task) => task.status === status);
+                const sortedTasks = filteredTasks.slice().sort(compareTasksByPriority);
 
                 const placeholder = taskList.querySelector(".drop-placeholder");
 
                 sortedTasks.forEach((task) => {
                     const card = createTaskCard(task);
+
                     if (placeholder) {
                         taskList.insertBefore(card, placeholder);
-                    } else {
-                        taskList.appendChild(card);
+                        return;
                     }
+
+                    taskList.appendChild(card);
                 });
 
                 const countElement = column.querySelector(".task-count");
