@@ -131,3 +131,34 @@ def test_delete_missing_returns_404(client):
     response = client.delete(f"/tasks/{MISSING_TASK_ID}")
     assert response.status_code == 404
     assert MISSING_TASK_ID in response.json()["detail"]
+
+
+def test_patch_forbidden_backward_transition_to_do_keeps_task_unchanged(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "In progress task",
+            "description": "Original description",
+            "status": "InProgress",
+            "priority": "High",
+            "assignee": "Alex",
+        },
+    )
+    assert create_response.status_code == 201
+    created_task = create_response.json()
+
+    patch_response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"status": "ToDo"},
+    )
+    assert patch_response.status_code == 422
+
+    get_response = client.get(f"/tasks/{created_task['id']}")
+    assert get_response.status_code == 200
+    stored_task = get_response.json()
+
+    assert stored_task["status"] == "InProgress"
+    assert stored_task["title"] == created_task["title"]
+    assert stored_task["description"] == created_task["description"]
+    assert stored_task["priority"] == created_task["priority"]
+    assert stored_task["assignee"] == created_task["assignee"]
