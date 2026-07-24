@@ -801,26 +801,22 @@
             const { payload } = getTaskPayloadFromForm();
             const originalTask = modalState.editingTask || {};
             const patchPayload = {};
+            const fieldDefinitions = [
+                { key: "title", fallback: "" },
+                { key: "description", fallback: "" },
+                { key: "status", fallback: "ToDo" },
+                { key: "priority", fallback: "Medium" },
+                { key: "assignee", fallback: null },
+            ];
 
-            if (payload.title !== (originalTask.title || "")) {
-                patchPayload.title = payload.title;
-            }
+            fieldDefinitions.forEach(({ key, fallback }) => {
+                const currentValue = payload[key];
+                const originalValue = originalTask[key] || fallback;
 
-            if (payload.description !== (originalTask.description || "")) {
-                patchPayload.description = payload.description;
-            }
-
-            if (payload.status !== (originalTask.status || "ToDo")) {
-                patchPayload.status = payload.status;
-            }
-
-            if (payload.priority !== (originalTask.priority || "Medium")) {
-                patchPayload.priority = payload.priority;
-            }
-
-            if (payload.assignee !== (originalTask.assignee || null)) {
-                patchPayload.assignee = payload.assignee;
-            }
+                if (currentValue !== originalValue) {
+                    patchPayload[key] = currentValue;
+                }
+            });
 
             return patchPayload;
         }
