@@ -687,6 +687,15 @@
             return 0;
         }
 
+        function getTaskCardTextValue(value, fallback, trimValue = false) {
+            const hasValue = value && String(value).trim();
+            if (!hasValue) {
+                return fallback;
+            }
+
+            return trimValue ? String(value).trim() : String(value);
+        }
+
         function createTaskCard(task) {
             const card = document.createElement("article");
             card.className = "task-card";
@@ -694,34 +703,26 @@
 
             const title = document.createElement("h3");
             title.className = "task-title";
-            title.textContent = task.title && String(task.title).trim()
-                ? String(task.title)
-                : "Untitled task";
+            title.textContent = getTaskCardTextValue(task.title, "Untitled task");
             card.appendChild(title);
 
             const description = document.createElement("p");
             description.className = "task-description";
-            description.textContent = task.description && String(task.description).trim()
-                ? String(task.description)
-                : "";
+            description.textContent = getTaskCardTextValue(task.description, "");
             card.appendChild(description);
 
             const meta = document.createElement("div");
             meta.className = "task-meta";
 
             const priority = document.createElement("span");
-            const normalizedPriority = task.priority && String(task.priority).trim()
-                ? String(task.priority).trim()
-                : "Low";
+            const normalizedPriority = getTaskCardTextValue(task.priority, "Low", true);
             priority.className = `task-priority priority-${normalizedPriority.toLowerCase()}`;
             priority.textContent = normalizedPriority.toUpperCase();
             meta.appendChild(priority);
 
             const assignee = document.createElement("span");
             assignee.className = "task-assignee";
-            const safeAssignee = task.assignee && String(task.assignee).trim()
-                ? String(task.assignee).trim()
-                : "Unassigned";
+            const safeAssignee = getTaskCardTextValue(task.assignee, "Unassigned", true);
             assignee.textContent = `Assignee: ${safeAssignee}`;
             meta.appendChild(assignee);
 
