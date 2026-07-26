@@ -128,6 +128,16 @@
             row-gap: 8px;
         }
 
+        .task-card.is-dragging {
+            opacity: 0.7;
+            transform: rotate(1.5deg);
+        }
+
+        .task-column.is-drop-target {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
         .task-title {
             margin: 0 0 6px;
             grid-column: 1;
@@ -307,6 +317,20 @@
         }
 
         .task-form-server-error.is-visible {
+            display: block;
+        }
+
+        .board-error {
+            margin: 0 28px 0;
+            padding: 10px 12px;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            display: none;
+        }
+
+        .board-error.is-visible {
             display: block;
         }
 
@@ -497,6 +521,8 @@
         </section>
     </main>
 
+    <div id="board-error" class="board-error" aria-live="polite"></div>
+
     <div id="task-modal" class="task-modal-overlay" aria-hidden="true">
         <div class="task-modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
             <div class="task-modal-header">
@@ -564,6 +590,104 @@
         };
 
         let tasks = [];
+        let dragState = {
+            isActive: false,
+            taskId: null,
+            originalStatus: null,
+            isUpdating: false,
+        };
+
+        function clearDropTargetClasses() {
+            Array.from(document.querySelectorAll(".task-column.is-drop-target")).forEach((column) => {
+                column.classList.remove("is-drop-target");
+            });
+        }
+
+        function clearDragState() {
+            dragState.isActive = false;
+            dragState.taskId = null;
+            dragState.originalStatus = null;
+            document.querySelector(".task-card.is-dragging")?.classList.remove("is-dragging");
+            clearDropTargetClasses();
+        }
+
+        function showBoardError(message = "") {
+            const boardErrorElement = document.getElementById("board-error");
+            if (!boardErrorElement) {
+                return;
+            }
+
+            boardErrorElement.textContent = message;
+            boardErrorElement.classList.toggle("is-visible", Boolean(message));
+        }
+
+        function clearBoardError() {
+            showBoardError("");
+        }
+
+        async function updateTaskStatus(taskId, destinationStatus) {
+            if (!taskId || dragState.isUpdating) {
+                return;
+            }
+
+            clearBoardError();
+            dragState.isUpdating = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        status: destinationStatus,
+                    }),
+                });
+
+                if (!response.ok) {
+                    let errorPayload = null;
+                    try {
+                        errorPayload = await response.json();
+                    } catch (parseError) {
+                        errorPayload = null;
+                    }
+
+                    const readablePatchError = extractServerErrorMessage(errorPayload && errorPayload.detail) || "Unable to update task status.";
+
+                    try {
+                        await fetchTasks({ rethrow: true });
+                    } catch (refreshError) {
+                        renderBoard(tasks);
+                    }
+
+                    showBoardError(readablePatchError);
+                    return;
+                }
+
+                try {
+                    await fetchTasks({ rethrow: true });
+                    clearBoardError();
+                } catch (refreshError) {
+                    renderBoard(tasks);
+                    showBoardError("Task status was updated, but the board could not be refreshed.");
+                }
+            } catch (error) {
+                const networkError = error && error.message
+                    ? `Unable to update task status: ${error.message}`
+                    : "Unable to update task status.";
+
+                try {
+                    await fetchTasks({ rethrow: true });
+                } catch (refreshError) {
+                    renderBoard(tasks);
+                }
+
+                showBoardError(networkError);
+            } finally {
+                dragState.isUpdating = false;
+                clearDragState();
+            }
+        }
 
         const modalState = {
             mode: "create",
@@ -700,6 +824,7 @@
             const card = document.createElement("article");
             card.className = "task-card";
             card.setAttribute("data-task-id", String(task.id));
+            card.draggable = true;
 
             const title = document.createElement("h3");
             title.className = "task-title";
@@ -932,7 +1057,7 @@
             }
         }
 
-        async function fetchTasks() {
+        async function fetchTasks({ rethrow = false } = {}) {
             try {
                 const response = await fetch(`${API_BASE_URL}/tasks`);
 
@@ -948,14 +1073,105 @@
 
                 tasks = payload;
                 renderBoard(tasks);
+                return true;
             } catch (error) {
                 console.error("Failed to load tasks", error);
+                if (rethrow) {
+                    throw error;
+                }
+                return false;
             }
         }
 
         function initializeBoard() {
             fetchTasks();
         }
+
+        document.addEventListener("dragstart", (event) => {
+            const targetElement = event.target instanceof Element ? event.target : null;
+            const card = targetElement ? targetElement.closest(".task-card") : null;
+            const interactiveElement = targetElement ? targetElement.closest("button, input, textarea, select, a") : null;
+
+            if (!card || interactiveElement) {
+                return;
+            }
+
+            const selectedTask = tasks.find((task) => String(task.id) === String(card.dataset.taskId));
+            if (!selectedTask) {
+                return;
+            }
+
+            dragState.isActive = true;
+            dragState.taskId = String(card.dataset.taskId);
+            dragState.originalStatus = selectedTask.status || null;
+            card.classList.add("is-dragging");
+
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", String(card.dataset.taskId));
+            }
+        });
+
+        document.addEventListener("dragover", (event) => {
+            const targetElement = event.target instanceof Element ? event.target : null;
+            const column = targetElement ? targetElement.closest(".task-column[data-status]") : null;
+
+            if (!dragState.isActive || !column) {
+                return;
+            }
+
+            event.preventDefault();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "move";
+            }
+
+            clearDropTargetClasses();
+            column.classList.add("is-drop-target");
+        });
+
+        document.addEventListener("dragleave", (event) => {
+            const targetElement = event.target instanceof Element ? event.target : null;
+            const column = targetElement ? targetElement.closest(".task-column[data-status]") : null;
+            const relatedTarget = event.relatedTarget instanceof Element ? event.relatedTarget : null;
+            const relatedColumn = relatedTarget ? relatedTarget.closest(".task-column[data-status]") : null;
+
+            if (!column || relatedColumn === column) {
+                return;
+            }
+
+            column.classList.remove("is-drop-target");
+        });
+
+        document.addEventListener("drop", (event) => {
+            const targetElement = event.target instanceof Element ? event.target : null;
+            const column = targetElement ? targetElement.closest(".task-column[data-status]") : null;
+
+            if (!dragState.isActive || !column) {
+                return;
+            }
+
+            event.preventDefault();
+            clearDropTargetClasses();
+
+            const draggedTaskId = dragState.taskId;
+            const destinationStatus = column.dataset.status;
+            if (dragState.originalStatus === destinationStatus) {
+                clearDragState();
+                return;
+            }
+
+            if (dragState.isUpdating) {
+                clearDragState();
+                return;
+            }
+
+            clearDragState();
+            void updateTaskStatus(draggedTaskId, destinationStatus);
+        });
+
+        document.addEventListener("dragend", () => {
+            clearDragState();
+        });
 
         document.addEventListener("click", (event) => {
             const newTaskButton = event.target.closest(".new-task-button");
