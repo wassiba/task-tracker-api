@@ -25,6 +25,10 @@
             line-height: 1.5;
         }
 
+        body.modal-open {
+            overflow: hidden;
+        }
+
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -61,6 +65,67 @@
             box-shadow: 0 4px 10px rgba(37, 99, 235, 0.18);
             outline: none;
             transform: translateY(-1px);
+        }
+
+        .filter-form {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin: 20px 28px 0;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            flex-wrap: wrap;
+        }
+
+        .filter-field {
+            display: flex;
+            flex: 1 1 160px;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-field label {
+            color: #334155;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .filter-field input,
+        .filter-field select {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-actions button {
+            padding: 9px 14px;
+            border-radius: 7px;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .apply-filters-button {
+            border: 0;
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .clear-filters-button {
+            border: 1px solid #cbd5e1;
+            background: var(--surface-soft);
+            color: #334155;
         }
 
         .board {
@@ -128,6 +193,10 @@
             row-gap: 8px;
         }
 
+        .task-card.is-overdue {
+            border-left: 3px solid #dc2626;
+        }
+
         .task-card.is-dragging {
             opacity: 0.7;
             transform: rotate(1.5deg);
@@ -181,6 +250,7 @@
             padding: 4px 9px;
             border-radius: 999px;
             font-size: 0.72rem;
+            font-weight: 600;
             letter-spacing: 0.04em;
             text-transform: uppercase;
         }
@@ -200,9 +270,27 @@
             color: #64748b;
         }
 
-        .task-assignee {
+        .task-assignee,
+        .task-due-date {
             color: #64748b;
             font-weight: 500;
+        }
+
+        .task-due-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+        }
+
+        .overdue-indicator {
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.7rem;
+            font-weight: 700;
+            line-height: 1.4;
         }
 
         .drop-placeholder {
@@ -267,8 +355,10 @@
             display: none;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
             padding: 20px;
             background: rgba(15, 23, 42, 0.5);
+            overflow-y: auto;
             z-index: 1000;
         }
 
@@ -278,11 +368,13 @@
 
         .task-modal {
             width: min(100%, 620px);
+            max-height: calc(100vh - 40px);
+            max-height: calc(100dvh - 40px);
             background: var(--surface);
             border-radius: 14px;
             border: 1px solid var(--border);
             box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
-            overflow: hidden;
+            overflow-y: auto;
         }
 
         .task-modal-header {
@@ -405,6 +497,18 @@
             color: #334155;
         }
 
+        .task-form-actions .task-modal-delete {
+            margin-right: auto;
+            border: 1px solid #dc2626;
+            background: #ffffff;
+            color: #b91c1c;
+        }
+
+        .task-form-actions .task-modal-delete:disabled {
+            cursor: wait;
+            opacity: 0.75;
+        }
+
         .task-form-actions .task-modal-submit {
             border: 0;
             background: var(--primary);
@@ -446,6 +550,43 @@
             New Task
         </button>
     </header>
+
+    <form id="filter-form" class="filter-form" aria-label="Task filters">
+        <div class="filter-field">
+            <label for="filter-search">Search</label>
+            <input id="filter-search" name="search" type="search" autocomplete="off" />
+        </div>
+
+        <div class="filter-field">
+            <label for="filter-status">Status</label>
+            <select id="filter-status" name="status">
+                <option value="">All statuses</option>
+                <option value="ToDo">ToDo</option>
+                <option value="InProgress">InProgress</option>
+                <option value="Done">Done</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="filter-priority">Priority</label>
+            <select id="filter-priority" name="priority">
+                <option value="">All priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="filter-assignee">Assignee</label>
+            <input id="filter-assignee" name="assignee" type="text" autocomplete="off" />
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="apply-filters-button">Apply</button>
+            <button type="button" class="clear-filters-button">Clear filters</button>
+        </div>
+    </form>
 
     <main class="board" aria-label="Task board">
         <section class="task-column" data-status="ToDo">
@@ -571,9 +712,16 @@
                         <input id="task-assignee" name="assignee" type="text" autocomplete="off" />
                         <p class="field-error" data-error-for="assignee"></p>
                     </div>
+
+                    <div class="task-form-field full-width">
+                        <label for="task-due-date">Due Date</label>
+                        <input id="task-due-date" name="due_date" type="date" />
+                        <p class="field-error" data-error-for="due_date"></p>
+                    </div>
                 </div>
 
                 <div class="task-form-actions">
+                    <button type="button" class="task-modal-delete" hidden>Delete</button>
                     <button type="button" class="task-modal-cancel" data-close-modal>Cancel</button>
                     <button type="submit" class="task-modal-submit">Create Task</button>
                 </div>
@@ -588,8 +736,18 @@
             Medium: 1,
             Low: 2
         };
+        const DUE_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+            dateStyle: "medium",
+            timeZone: "UTC",
+        });
 
         let tasks = [];
+        let activeFilters = {
+            search: "",
+            status: "",
+            priority: "",
+            assignee: "",
+        };
         let dragState = {
             isActive: false,
             taskId: null,
@@ -710,17 +868,20 @@
                 statusSelect: document.getElementById("task-status"),
                 prioritySelect: document.getElementById("task-priority"),
                 assigneeInput: document.getElementById("task-assignee"),
+                dueDateInput: document.getElementById("task-due-date"),
+                deleteButton: document.querySelector(".task-modal-delete"),
                 submitButton: document.querySelector(".task-modal-submit"),
             };
         }
 
         function resetModalFormValues() {
-            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput } = getModalElements();
+            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput, dueDateInput } = getModalElements();
             titleInput.value = "";
             descriptionInput.value = "";
             statusSelect.value = "ToDo";
             prioritySelect.value = "Medium";
             assigneeInput.value = "";
+            dueDateInput.value = "";
         }
 
         function clearModalErrors() {
@@ -737,16 +898,19 @@
         }
 
         function renderModalState() {
-            const { overlay, modalTitle, submitButton } = getModalElements();
+            const { overlay, modalTitle, deleteButton, submitButton } = getModalElements();
             overlay.classList.toggle("is-open", modalState.isOpen);
             overlay.setAttribute("aria-hidden", String(!modalState.isOpen));
+            document.body.classList.toggle("modal-open", modalState.isOpen);
             modalTitle.textContent = modalState.mode === "edit" ? "Edit Task" : "Create Task";
+            deleteButton.hidden = modalState.mode !== "edit";
+            deleteButton.disabled = modalState.isSubmitting;
             submitButton.textContent = modalState.mode === "edit" ? "Save Changes" : "Create Task";
             submitButton.disabled = modalState.isSubmitting;
         }
 
         function openModal(mode, task = null) {
-            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput } = getModalElements();
+            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput, dueDateInput } = getModalElements();
 
             resetModalFormValues();
             clearModalErrors();
@@ -763,6 +927,7 @@
                 statusSelect.value = task.status || "ToDo";
                 prioritySelect.value = task.priority || "Medium";
                 assigneeInput.value = task.assignee || "";
+                dueDateInput.value = task.due_date ? String(task.due_date).slice(0, 10) : "";
             }
 
             renderModalState();
@@ -820,11 +985,46 @@
             return trimValue ? String(value).trim() : String(value);
         }
 
+        function isTaskOverdue(task, today = new Date()) {
+            if (!task.due_date || task.status === "Done") {
+                return false;
+            }
+
+            const dateMatch = String(task.due_date).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!dateMatch) {
+                return false;
+            }
+
+            const dueYear = Number(dateMatch[1]);
+            const dueMonth = Number(dateMatch[2]);
+            const dueDay = Number(dateMatch[3]);
+            const dueDate = new Date(dueYear, dueMonth - 1, dueDay);
+            const isValidDate = dueDate.getFullYear() === dueYear
+                && dueDate.getMonth() === dueMonth - 1
+                && dueDate.getDate() === dueDay;
+
+            if (!isValidDate) {
+                return false;
+            }
+
+            const dueCalendarDate = (dueYear * 10000) + (dueMonth * 100) + dueDay;
+            const todayCalendarDate = (today.getFullYear() * 10000)
+                + ((today.getMonth() + 1) * 100)
+                + today.getDate();
+
+            return dueCalendarDate < todayCalendarDate;
+        }
+
         function createTaskCard(task) {
             const card = document.createElement("article");
             card.className = "task-card";
             card.setAttribute("data-task-id", String(task.id));
             card.draggable = true;
+            const isOverdue = isTaskOverdue(task);
+
+            if (isOverdue) {
+                card.classList.add("is-overdue");
+            }
 
             const title = document.createElement("h3");
             title.className = "task-title";
@@ -850,6 +1050,25 @@
             const safeAssignee = getTaskCardTextValue(task.assignee, "Unassigned", true);
             assignee.textContent = `Assignee: ${safeAssignee}`;
             meta.appendChild(assignee);
+
+            if (task.due_date) {
+                const dueDate = new Date(task.due_date);
+
+                if (!Number.isNaN(dueDate.getTime())) {
+                    const dueDateElement = document.createElement("span");
+                    dueDateElement.className = "task-due-date";
+                    dueDateElement.textContent = `Due: ${DUE_DATE_FORMATTER.format(dueDate)}`;
+
+                    if (isOverdue) {
+                        const overdueIndicator = document.createElement("span");
+                        overdueIndicator.className = "overdue-indicator";
+                        overdueIndicator.textContent = "Overdue";
+                        dueDateElement.appendChild(overdueIndicator);
+                    }
+
+                    meta.appendChild(dueDateElement);
+                }
+            }
 
             card.appendChild(meta);
 
@@ -900,7 +1119,7 @@
         }
 
         function getTaskPayloadFromForm() {
-            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput } = getModalElements();
+            const { titleInput, descriptionInput, statusSelect, prioritySelect, assigneeInput, dueDateInput } = getModalElements();
             const trimmedTitle = String(titleInput.value || "").trim();
             const trimmedDescription = String(descriptionInput.value || "").trim();
             const trimmedAssignee = String(assigneeInput.value || "").trim();
@@ -910,21 +1129,26 @@
                 errors.title = "Title is required";
             }
 
-            return {
-                payload: {
-                    title: trimmedTitle,
-                    description: trimmedDescription ? trimmedDescription : "",
-                    status: statusSelect.value,
-                    priority: prioritySelect.value,
-                    assignee: trimmedAssignee ? trimmedAssignee : null,
-                },
-                errors,
+            const payload = {
+                title: trimmedTitle,
+                description: trimmedDescription ? trimmedDescription : "",
+                status: statusSelect.value,
+                priority: prioritySelect.value,
+                assignee: trimmedAssignee ? trimmedAssignee : null,
             };
+
+            if (dueDateInput.value) {
+                payload.due_date = dueDateInput.value;
+            }
+
+            return { payload, errors };
         }
 
         function buildEditPayload() {
             const { payload } = getTaskPayloadFromForm();
             const originalTask = modalState.editingTask || {};
+            const currentDueDate = payload.due_date || null;
+            const originalDueDate = originalTask.due_date ? String(originalTask.due_date).slice(0, 10) : null;
             const patchPayload = {};
             const fieldDefinitions = [
                 { key: "title", fallback: "" },
@@ -942,6 +1166,10 @@
                     patchPayload[key] = currentValue;
                 }
             });
+
+            if (currentDueDate !== originalDueDate) {
+                patchPayload.due_date = currentDueDate;
+            }
 
             return patchPayload;
         }
@@ -965,7 +1193,7 @@
             return errors;
         }
 
-        function extractServerErrorMessage(detail) {
+        function extractServerErrorMessage(detail, fallback = "Unable to save task.") {
             if (typeof detail === "string") {
                 return detail;
             }
@@ -981,7 +1209,7 @@
                 return detail.detail;
             }
 
-            return "Unable to save task.";
+            return fallback;
         }
 
         function applyValidationErrors(errors = {}) {
@@ -998,6 +1226,50 @@
             const { serverErrorBanner } = getModalElements();
             serverErrorBanner.textContent = message;
             serverErrorBanner.classList.toggle("is-visible", Boolean(message));
+        }
+
+        async function deleteTask() {
+            if (
+                modalState.mode !== "edit"
+                || modalState.editingTaskId === null
+                || modalState.isSubmitting
+            ) {
+                return;
+            }
+
+            if (!window.confirm("Are you sure you want to delete this task?")) {
+                return;
+            }
+
+            modalState.isSubmitting = true;
+            renderModalState();
+            applyServerError("");
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/tasks/${modalState.editingTaskId}`, {
+                    method: "DELETE",
+                });
+
+                if (!response.ok) {
+                    const errorPayload = await response.json().catch(() => null);
+                    const errorMessage = extractServerErrorMessage(
+                        errorPayload && errorPayload.detail,
+                        "Unable to delete task."
+                    );
+                    modalState.isSubmitting = false;
+                    renderModalState();
+                    applyServerError(errorMessage);
+                    return;
+                }
+
+                modalState.isSubmitting = false;
+                closeModal();
+                fetchTasks();
+            } catch (error) {
+                modalState.isSubmitting = false;
+                renderModalState();
+                applyServerError(error.message || "Unable to delete task.");
+            }
         }
 
         async function submitTaskForm(event) {
@@ -1057,9 +1329,71 @@
             }
         }
 
+        function getFilterElements() {
+            return {
+                form: document.getElementById("filter-form"),
+                searchInput: document.getElementById("filter-search"),
+                statusSelect: document.getElementById("filter-status"),
+                prioritySelect: document.getElementById("filter-priority"),
+                assigneeInput: document.getElementById("filter-assignee"),
+            };
+        }
+
+        function readFilterValues() {
+            const { searchInput, statusSelect, prioritySelect, assigneeInput } = getFilterElements();
+
+            return {
+                search: String(searchInput.value || "").trim(),
+                status: statusSelect.value,
+                priority: prioritySelect.value,
+                assignee: String(assigneeInput.value || "").trim(),
+            };
+        }
+
+        function buildTasksRequestUrl() {
+            const queryParameters = new URLSearchParams();
+
+            Object.entries(activeFilters).forEach(([name, value]) => {
+                if (value) {
+                    queryParameters.set(name, value);
+                }
+            });
+
+            const queryString = queryParameters.toString();
+            return `${API_BASE_URL}/tasks${queryString ? `?${queryString}` : ""}`;
+        }
+
+        function applyFilters(event) {
+            event.preventDefault();
+            const nextFilters = readFilterValues();
+
+            if (JSON.stringify(nextFilters) === JSON.stringify(activeFilters)) {
+                return;
+            }
+
+            activeFilters = nextFilters;
+            void fetchTasks();
+        }
+
+        function clearFilters() {
+            const { form } = getFilterElements();
+            const hasActiveFilters = Object.values(activeFilters).some(Boolean);
+            form.reset();
+            activeFilters = {
+                search: "",
+                status: "",
+                priority: "",
+                assignee: "",
+            };
+
+            if (hasActiveFilters) {
+                void fetchTasks();
+            }
+        }
+
         async function fetchTasks({ rethrow = false } = {}) {
             try {
-                const response = await fetch(`${API_BASE_URL}/tasks`);
+                const response = await fetch(buildTasksRequestUrl());
 
                 if (!response.ok) {
                     throw new Error(`Request failed with status ${response.status}`);
@@ -1194,6 +1528,12 @@
                 return;
             }
 
+            const deleteButton = event.target.closest(".task-modal-delete");
+            if (deleteButton) {
+                void deleteTask();
+                return;
+            }
+
             const closeButton = event.target.closest("[data-close-modal]");
             if (closeButton) {
                 closeModal();
@@ -1206,8 +1546,20 @@
         });
 
         document.addEventListener("submit", (event) => {
+            if (event.target && event.target.id === "filter-form") {
+                applyFilters(event);
+                return;
+            }
+
             if (event.target && event.target.id === "task-form") {
                 submitTaskForm(event);
+            }
+        });
+
+        document.addEventListener("click", (event) => {
+            const clearFiltersButton = event.target.closest(".clear-filters-button");
+            if (clearFiltersButton) {
+                clearFilters();
             }
         });
 

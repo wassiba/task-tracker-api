@@ -77,10 +77,16 @@ def create_task(payload: TaskCreate) -> TaskResponse:
 def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
+    search: str | None = None,
+    assignee: str | None = None,
+    overdue: bool | None = None,
 ) -> list[TaskResponse]:
     return storage.get_all_tasks(
         status=status,
         priority=priority,
+        search=search,
+        assignee=assignee,
+        overdue=overdue,
     )
 
 
