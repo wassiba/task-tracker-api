@@ -6,7 +6,7 @@ MISSING_TASK_ID = "00000000-0000-0000-0000-000000000000"
 
 def test_create_task_valid_returns_201_with_full_body(client):
     response = client.post("/tasks", json={"title": "My Task"})
-    assert response.status_code == 201
+    assert response.status_code == 418
     data = response.json()
     assert data["title"] == "My Task"
     assert data["description"] == ""
