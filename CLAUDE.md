@@ -37,9 +37,9 @@ Do NOT open `frontend/index.html` directly via `file://`. The backend's CORS `al
 
 A `file://` origin isn't on that list, so the browser may block the frontend's `fetch()` calls to the API. Serve the frontend over HTTP from one of the origins above (port 5500 is the conventional choice) instead. [VERIFY] the exact serve command/tool — none is defined in this repo, and this has not been executed to confirm. The frontend itself is hardcoded to call the API at `http://localhost:8000` (`frontend/index.html`, `API_BASE_URL`).
 
-## Known issue
+## Dependency note
 
-`requirements.txt` lists `httpx2` (not `httpx`) — a suspected invalid dependency entry requiring separate verification, not confirmed as an intentional pin. Don't treat `requirements.txt` as necessarily correct/authoritative without checking. Do not modify `requirements.txt` as part of Part 4.1. Treat any correction as a separate, explicitly approved change that requires dependency-installation and test verification.
+`requirements.txt` lists `httpx2` (not `httpx`) intentionally. `httpx2` is the maintained continuation of HTTPX, supports Python 3.11, and is the package the installed Starlette `TestClient` prefers. No correction is needed.
 
 ## Storage
 
