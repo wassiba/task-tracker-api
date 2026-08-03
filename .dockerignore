@@ -1,0 +1,56 @@
+# Environment / secrets
+.env
+.env.*
+
+# Version control and CI metadata
+.git
+.github
+.gitignore
+
+# Course/agent metadata not used by the build
+.agents/
+
+# Root documentation not needed at runtime
+CLAUDE.md
+README.md
+CHANGELOG.md
+API_SUMMARY_CHECKLIST.md
+
+# Python virtual environments
+venv/
+.venv/
+
+# Python bytecode and caches
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+
+# Tests (not needed at runtime)
+tests/
+
+# Frontend (separate static artifact, not served by the API)
+frontend/
+
+# Docs (course artifacts, not needed at runtime)
+docs/
+
+# Coverage / build / packaging artifacts
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.egg-info/
+build/
+dist/
+
+# Logs
+*.log
+
+# Editor / OS artifacts
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
