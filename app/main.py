@@ -1,16 +1,9 @@
-"""
-This is the entry point of your FastAPI application.
+"""FastAPI application entry point for the Task Tracker API.
 
-It currently does only one thing:
-
-Creates the FastAPI application.
-Defines one endpoint:
-GET /health
-
-Nothing else.
-
-This follows the Module 1 requirement exactly.
-
+Defines the HTTP interface for task management: a health check endpoint
+and CRUD endpoints for tasks, including server-side search/filtering and
+backend-authoritative status-transition validation. CORS is restricted to
+a fixed set of local development origins (see `allowed_origins` below).
 """
 from datetime import datetime, timezone
 
@@ -28,7 +21,10 @@ load_dotenv()
 app = FastAPI(
     title="Task Tracker API",
     version="0.1.0",
-    description="Learning-focused Task Tracker REST API for Module 1."
+    description=(
+        "Task Tracker REST API: create, read, update, and delete tasks, "
+        "with search/filtering and backend-enforced status transitions."
+    )
 )
 
 allowed_origins = [
@@ -49,9 +45,14 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    """
-    Health check endpoint.
-    Returns HTTP 200 with the current UTC timestamp.
+    """Health check endpoint.
+
+    Responds with HTTP 200.
+
+    Returns:
+        dict[str, str]: A mapping containing `status` (always "ok")
+        and `timestamp` (the current UTC time as an ISO 8601 string,
+        from `datetime.now(timezone.utc).isoformat()`).
     """
     return {
         "status": "ok",
@@ -66,6 +67,17 @@ def health_check():
     tags=["tasks"],
 )
 def create_task(payload: TaskCreate) -> TaskResponse:
+    """Create a new task.
+
+    Args:
+        payload: Task fields to create. Server-managed fields such as
+            `id`, `created_at`, and `updated_at` are not accepted (see
+            `TaskCreate`).
+
+    Returns:
+        TaskResponse: The newly created task (HTTP 201), including its
+        generated `id` and timestamps.
+    """
     return storage.add_task(payload)
 
 
@@ -81,6 +93,26 @@ def list_tasks(
     assignee: str | None = None,
     overdue: bool | None = None,
 ) -> list[TaskResponse]:
+    """List tasks, optionally filtered.
+
+    Supplied filters are combined using AND logic: each active filter
+    narrows the result of the others (see `get_all_tasks` in
+    `app/storage.py`). Blank or whitespace-only `search`/`assignee`
+    values are ignored.
+
+    Args:
+        status: Restrict results to this status.
+        priority: Restrict results to this priority.
+        search: Case-insensitive substring match against title or
+            description.
+        assignee: Case-insensitive substring match against assignee.
+        overdue: If true, restrict results to tasks with a past
+            `due_date` and a status other than `Done`.
+
+    Returns:
+        list[TaskResponse]: Matching tasks (HTTP 200). Results are not
+        sorted by this endpoint.
+    """
     return storage.get_all_tasks(
         status=status,
         priority=priority,
@@ -96,6 +128,17 @@ def list_tasks(
     tags=["tasks"],
 )
 def get_task(task_id: str) -> TaskResponse:
+    """Retrieve a single task by ID.
+
+    Args:
+        task_id: The task's unique identifier.
+
+    Returns:
+        TaskResponse: The matching task (HTTP 200).
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+    """
     task = storage.get_task_by_id(task_id)
     if task is None:
         raise HTTPException(
@@ -111,6 +154,32 @@ def get_task(task_id: str) -> TaskResponse:
     tags=["tasks"],
 )
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
+    """Partially update an existing task.
+
+    Only fields explicitly supplied on `payload` are applied; omitted
+    fields are left unchanged (see `update_task` in `app/storage.py`).
+    When `payload` supplies a non-null `status` value, the transition
+    from the task's current status to that value is validated against
+    the allowed state machine (see `validate_status_transition` in
+    `app/business_rules.py`) before the update is applied.
+
+    Args:
+        task_id: The task's unique identifier.
+        payload: Fields to update. Fields not explicitly supplied are
+            left unchanged.
+
+    Returns:
+        TaskResponse: The updated task (HTTP 200).
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+        HTTPException: 422 if `payload` supplies a non-null `status`
+            value that is not a valid transition from the task's
+            current status. Malformed request bodies (e.g. invalid
+            field types or unknown fields) are rejected by request
+            validation before this handler runs and are not raised
+            here.
+    """
     if payload.status is not None:
         existing = storage.get_task_by_id(task_id)
         if existing is None:
@@ -135,6 +204,17 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
     tags=["tasks"],
 )
 def delete_task(task_id: str) -> Response:
+    """Delete a task by ID.
+
+    Args:
+        task_id: The task's unique identifier.
+
+    Returns:
+        Response: An empty HTTP 204 response on success.
+
+    Raises:
+        HTTPException: 404 if no task with `task_id` exists.
+    """
     if storage.delete_task(task_id):
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     raise HTTPException(
