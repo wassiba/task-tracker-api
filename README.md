@@ -199,6 +199,9 @@ tests/
 
 .github/workflows/ci.yml      GitHub Actions CI (Python 3.11, pytest)
 
+docs/documentation/
+  claim-vs-reality.md         Module 4 Part 4.4 claim-vs-reality audit
+
 docs/midcourse/                Historical Module 3 course artifacts
                                 (design rationale, not current API authority)
 
