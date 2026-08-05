@@ -199,6 +199,9 @@ tests/
 
 .github/workflows/ci.yml      GitHub Actions CI (Python 3.11, pytest)
 
+docs/decisions/
+  in-memory-task-storage.md   Module 4 Part 4.6 storage decision note
+
 docs/documentation/
   claim-vs-reality.md         Module 4 Part 4.4 claim-vs-reality audit
 
@@ -213,6 +216,7 @@ Dockerfile                    Multi-stage build; python:3.11-slim runtime
 
 - All task data is **in-memory** and is lost on every restart.
 - No database or persistence layer.
+- See [In-Memory Task Storage Decision](docs/decisions/in-memory-task-storage.md) for the rationale, trade-offs, consequences, and open questions behind this design.
 - No authentication or authorization.
 - No deployment workflow - CI runs tests only.
 - The backend does not sort results; sorting is a frontend-only concern.
