@@ -208,6 +208,9 @@ docs/documentation/
 docs/midcourse/                Historical Module 3 course artifacts
                                 (design rationale, not current API authority)
 
+docs/reflections/
+  module-4-tool-fit-reflection.md   Module 4 tool-fit reflection
+
 Dockerfile                    Multi-stage build; python:3.11-slim runtime
 .dockerignore                  Build-context exclusions (env files, docs, tests, frontend, etc.)
 ```
