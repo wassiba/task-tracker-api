@@ -3,8 +3,11 @@
 ## Project and Current Phase
 
 - This repository contains the Task Tracker API course project.
-- The project is complete through Module 4.
-- The current phase is Module 5: Security, Governance, and Advanced Workflows.
+- The application baseline was completed through Module 4.
+- Module 5 added security, governance, architecture, AI-review, and
+  personal-playbook evidence.
+- The current phase is the Final Project: release verification, documentation
+  alignment, and ownership evidence on the `final-project` branch.
 - Treat existing application behavior as frozen unless a specific,
   evidence-backed fix receives separate approval.
 - Keep the project course-scoped; do not infer production readiness.
@@ -92,15 +95,16 @@ Serve the frontend over HTTP:
 - `requirements.txt` intentionally declares `httpx2` for this project.
 - Do not replace `httpx2` with `httpx` without separate evidence and approval.
 
-## Module 5 Working Boundaries
+## Final Project Working Boundaries
 
 - Read relevant repository evidence before drawing conclusions.
 - Default to read-only investigation.
-- Module 5 is documentation-first; root `AGENTS.md` is the Part 5.1 setup
-  exception.
+- The Final Project is release- and documentation-first. Do not add product
+  features.
 - Do not change application code, tests, CI, Docker, dependencies,
-  configuration, or unrelated documentation unless a later bounded task
-  explicitly authorizes it.
+  configuration, or unrelated documentation unless a bounded task explicitly
+  authorizes a small evidence-backed bug fix, security correction, or required
+  release-documentation change.
 - Use one bounded objective per Codex task.
 - Distinguish verified facts, architectural inference, historical evidence,
   and unverified assumptions.

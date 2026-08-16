@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a course-scoped implementation (Module 4 of an AI Assisted Coding course) of a Task Tracker REST API, built with:
+This project is a course-scoped Task Tracker REST API developed across an AI Assisted Coding course. Its application baseline was completed through Module 4 and finalized through Module 5 and the Final Project with security, governance, documentation, release verification, and ownership evidence. It is built with:
 
 - **FastAPI** and **Pydantic v2** for the backend
 - A standalone, vanilla HTML/JavaScript Kanban frontend (no build step, no framework)
@@ -132,7 +132,7 @@ Display sorting (priority High -> Medium -> Low, then ID) is owned entirely by t
 .\venv\Scripts\python.exe -m pytest -v
 ```
 
-Verified Part 4.4 baseline: **37 passed, 0 failed, 0 skipped**. This is the result of the most recent verification pass against this repository state, not a permanent guarantee - re-run the suite after any change.
+Final Project verification: **38 passed, 0 failed, 0 skipped** on August 16, 2026. The suite includes the nullable-title regression added during the final release check. This result is evidence for the reviewed `final-project` state, not a permanent guarantee - re-run the suite after any change.
 
 ## API Reference
 
@@ -208,7 +208,7 @@ docker rm tt-dev
 - `docker rm tt-dev` removes only the container; the `task-tracker:dev` image is retained on the host afterward.
 - `.env` is excluded from the build context (`.dockerignore`: `.env`, `.env.*`), and the application does not currently consume `PORT`/`APP_ENV` in any case (see [Environment Variables](#environment-variables)).
 
-These commands (image tag `task-tracker:dev`, container name `tt-dev`) were successfully exercised during Part 4.3. They were not re-executed during this documentation pass.
+These commands (image tag `task-tracker:dev`, container name `tt-dev`) were re-executed during Final Project verification on August 16, 2026. The image built successfully, `/health` returned HTTP 200, Docker reported the container as healthy, and the runtime used the non-root `app` user. See [Release Evidence](docs/release-evidence.md) for the recorded commands and results.
 
 ## Continuous Integration
 
@@ -236,36 +236,37 @@ APP_ENV=development
 ## Project Structure
 
 ```text
-app/                          FastAPI backend
-  main.py                     Routes, CORS, FastAPI app instance
-  models.py                   Pydantic request/response models
+README.md                     Setup, operation, limitations, and Final Project summary
+AGENTS.md                     Repository-specific AI and contributor guardrails
+Dockerfile                    Multi-stage Python 3.11 container build
+.dockerignore                 Build-context and sensitive-file exclusions
+.github/workflows/ci.yml      GitHub Actions CI using Python 3.11 and pytest
+
+app/
+  main.py                     Routes, CORS, and FastAPI application
+  models.py                   Request and response models
   business_rules.py           Status-transition validation
-  storage.py                  In-memory task store
+  storage.py                  In-memory task store and filtering
 
 frontend/
-  index.html                  Standalone Kanban board (vanilla JS, drag-and-drop)
+  index.html                  Standalone Kanban board
 
 tests/
-  test_tasks.py                pytest suite (FastAPI TestClient)
-  conftest.py                  Fixtures, storage reset
-  verify_a.py                  Manual smoke script (not pytest-collected)
+  test_tasks.py               Automated pytest suite
+  conftest.py                 Fixtures and storage reset
+  verify_a.py                 Manual smoke script; not collected by pytest
 
-.github/workflows/ci.yml      GitHub Actions CI (Python 3.11, pytest)
-
-docs/decisions/
-  in-memory-task-storage.md   Module 4 Part 4.6 storage decision note
-
-docs/documentation/
-  claim-vs-reality.md         Module 4 Part 4.4 claim-vs-reality audit
-
-docs/midcourse/                Historical Module 3 course artifacts
-                                (design rationale, not current API authority)
-
-docs/reflections/
-  module-4-tool-fit-reflection.md   Module 4 tool-fit reflection
-
-Dockerfile                    Multi-stage build; python:3.11-slim runtime
-.dockerignore                  Build-context exclusions (env files, docs, tests, frontend, etc.)
+docs/
+  release-evidence.md         Final baseline, CI, Docker, and claim verification
+  final-ai-review.md          AI review, security, manual check, and ownership evidence
+  ai-playbook.md              Personal AI working rules and Decision Card
+  security-review.md          Module 5 security review and finding reconciliation
+  architecture.md             Current Task Tracker architecture
+  decisions/                  Technical and planning decision records
+  documentation/              Module 4 claim-versus-reality evidence
+  midcourse/                  Historical Module 3 evidence
+  reflections/                Historical tool-fit reflections
+  reviews/                    Historical AI-review triage records
 ```
 
 ## Limitations
