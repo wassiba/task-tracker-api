@@ -15,7 +15,7 @@
 ## CI evidence
 
 - Workflow file: `.github/workflows/ci.yml`
-- Latest final-project run link or note: pending the first push of `final-project`; this line will be replaced with the observed run before submission.
+- Latest recorded green final-project run: [CI run 31961878847](https://github.com/wassiba/task-tracker-api/actions/runs/31961878847), completed successfully for commit `8ae7d1824f134c94b79b801af692d0e7aaddfcbd`. The `test` job and its `Run tests` step both completed successfully.
 - Test command used by CI: `python -m pytest -v`
 - Trigger check: the workflow runs on both `push` and `pull_request`.
 - Environment check: Python is explicitly set to `3.11` and dependencies are installed from `requirements.txt`.
@@ -40,7 +40,7 @@
 | The frontend must be served over HTTP and supports the Kanban create/edit flow. | Served `frontend/` on port 5500 and exercised the create and edit modals in a browser. | Accurate; board and saved changes rendered correctly. | None. |
 | The complete test command passes. | Ran `.\venv\Scripts\python.exe -m pytest -v` before and after final work. | Accurate; 37 baseline tests and 38 final tests passed. | Added one focused regression test for explicit null title updates. |
 | The Docker image runs as non-root and exposes a working health endpoint. | Successful build/run, HTTP request, `docker inspect`, and `docker exec ... id`. | Accurate; HTTP 200, Docker `healthy`, UID/GID 999. | None. |
-| CI uses Python 3.11 and runs pytest without failure-hiding shortcuts. | Read `.github/workflows/ci.yml` line by line. | Accurate statically; remote run evidence is recorded after push. | None. |
+| CI uses Python 3.11 and runs pytest without failure-hiding shortcuts. | Read `.github/workflows/ci.yml` line by line and inspected CI run 31961878847 plus job 95200959517 through GitHub's API. | Accurate; the final-project push completed successfully and its `Run tests` step passed. | None. |
 
 ## Scope control
 
