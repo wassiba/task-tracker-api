@@ -9,6 +9,59 @@ This project is a course-scoped implementation (Module 4 of an AI Assisted Codin
 
 Task storage is **in-memory**. The backend is authoritative for stored task data and status-transition decisions: the frontend sends changes to the API and displays whatever state the API returns, rather than deciding task state on its own. The frontend remains responsible for display sorting, and both the backend and frontend independently implement the overdue-display rule (see [Search and Filtering](#search-and-filtering)) - the two must be kept synchronized if that rule changes. There is no database, no authentication, and no deployment workflow - this project is not intended for production use.
 
+## Final Project
+
+**Branch reviewed:** `final-project`
+
+### What this submission demonstrates
+
+- The existing Task Tracker remains within the intended course scope and its full test suite passes.
+- GitHub Actions runs pytest on every push and pull request.
+- The Docker image builds and runs with `/health` returning HTTP 200.
+- AI review, security, release, and ownership evidence is recorded in `docs/`.
+
+### How to run locally
+
+```powershell
+python -m venv venv
+.\venv\Scripts\python.exe -m pip install --upgrade pip
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+```
+
+In a second terminal, serve the frontend and open `http://localhost:5500/`:
+
+```powershell
+.\venv\Scripts\python.exe -m http.server 5500 --directory frontend
+```
+
+### How to run tests
+
+```powershell
+.\venv\Scripts\python.exe -m pytest -v
+```
+
+### How to run with Docker
+
+```powershell
+docker build --tag task-tracker:dev .
+docker run --detach --name tt-dev --publish 8000:8000 task-tracker:dev
+curl.exe --fail --show-error http://localhost:8000/health
+docker inspect --format "{{json .State.Health}}" tt-dev
+docker stop tt-dev
+docker rm tt-dev
+```
+
+### Evidence files
+
+- [Release evidence](docs/release-evidence.md)
+- [Final AI review and ownership evidence](docs/final-ai-review.md)
+- [Personal AI playbook](docs/ai-playbook.md)
+
+### AI assistance summary
+
+AI helped review the nullable-title defect, verify the bounded correction, and structure the release, Docker, CI, security, and ownership evidence. I verified the result through focused and full pytest runs, live API and browser checks, Docker build/runtime checks, diff review, and a tracked-file safety scan. I rejected an earlier AI claim that the ignored local virtual environment disproved the documented Python 3.11 target because the tracked CI configuration and successful Python 3.11 CI evidence were stronger.
+
 ## Features
 
 - Task create, read, update (partial), and delete (CRUD)

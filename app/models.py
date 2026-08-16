@@ -91,17 +91,17 @@ class TaskUpdate(BaseModel):
 
     @field_validator("title", mode="before")
     @classmethod
-    def validate_title(cls, value: Optional[str]) -> Optional[str]:
+    def validate_title(cls, value: Optional[str]) -> str:
         """Validate an optional title update.
 
-        ``None`` is returned unchanged when received. Any other
-        non-string value is rejected. A string value is passed to the
-        module-level ``_validate_title`` helper (stripped, then
-        rejected if empty/whitespace-only or longer than 200
-        characters).
+        An explicitly supplied ``None`` or any other non-string value is
+        rejected. A string value is passed to the module-level
+        ``_validate_title`` helper (stripped, then rejected if
+        empty/whitespace-only or longer than 200 characters). Omitting
+        ``title`` remains valid for a partial update.
         """
         if value is None:
-            return None
+            raise ValueError("Title must be a string")
         if not isinstance(value, str):
             raise ValueError("Title must be a string")
         return _validate_title(value)

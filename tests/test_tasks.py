@@ -373,6 +373,22 @@ def test_patch_partial_update_keeps_other_fields(client, created_task):
     assert data["id"] == created_task["id"]
 
 
+def test_patch_null_title_returns_422_and_keeps_task_unchanged(
+    client,
+    created_task,
+):
+    response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"title": None},
+    )
+
+    assert response.status_code == 422
+
+    stored_response = client.get(f"/tasks/{created_task['id']}")
+    assert stored_response.status_code == 200
+    assert stored_response.json() == created_task
+
+
 def test_patch_task_adds_due_date(client, created_task):
     due_date = (date.today() + timedelta(days=7)).isoformat()
 
